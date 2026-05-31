@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { EyeOff, Loader as Loader2, Shield, Activity, Brain, ChevronRight } from 'lucide-react'
+import { ArrowLeft, EyeOff, Loader as Loader2, Shield, Activity, Brain, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -144,6 +144,10 @@ export function Login() {
         </div>
 
         <div className="w-full max-w-sm relative z-10">
+          <Link to="/" className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-primary transition-colors mb-6">
+            <ArrowLeft className="size-3.5" />
+            Back to homepage
+          </Link>
 
           {/* Mobile: show eye scene instead of the full split panel */}
           <motion.div
