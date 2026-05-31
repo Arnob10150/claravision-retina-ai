@@ -115,12 +115,16 @@ export function Dashboard() {
   const [diseaseDistribution, setDiseaseDistribution] = useState<DiseaseSlice[]>([])
   const [monthlyTrend, setMonthlyTrend] = useState<MonthlyPoint[]>([])
   const [loading, setLoading] = useState(true)
+  const [chartsLoading, setChartsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
 
   async function loadData(showRefresh = false) {
     if (showRefresh) setRefreshing(true)
-    else setLoading(true)
+    else {
+      setLoading(true)
+      setChartsLoading(true)
+    }
     setError(null)
 
     try {
@@ -136,7 +140,6 @@ export function Dashboard() {
       twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14)
       const twoWeeksAgoISO = twoWeeksAgo.toISOString()
 
-      // Run all queries in parallel
       const [
         totalRes,
         pendingRes,
@@ -145,33 +148,21 @@ export function Dashboard() {
         lastWeekTotalRes,
         lastWeekPendingRes,
         recentRes,
-        allClassRes,
-        monthlyRes,
       ] = await Promise.all([
-        supabase.from('scans').select('*', { count: 'exact', head: true }),
-        supabase.from('scans').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-        supabase.from('scans').select('*', { count: 'exact', head: true }).eq('uncertainty_level', 'high'),
-        supabase.from('scans').select('*', { count: 'exact', head: true }).gte('created_at', todayISO),
-        // Last week total (for trend)
-        supabase.from('scans').select('*', { count: 'exact', head: true })
+        supabase.from('scans').select('id', { count: 'exact', head: true }),
+        supabase.from('scans').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+        supabase.from('scans').select('id', { count: 'exact', head: true }).eq('uncertainty_level', 'high'),
+        supabase.from('scans').select('id', { count: 'exact', head: true }).gte('created_at', todayISO),
+        supabase.from('scans').select('id', { count: 'exact', head: true })
           .gte('created_at', twoWeeksAgoISO).lt('created_at', weekAgoISO),
-        // Last week pending (for trend)
-        supabase.from('scans').select('*', { count: 'exact', head: true })
+        supabase.from('scans').select('id', { count: 'exact', head: true })
           .eq('status', 'pending').gte('created_at', twoWeeksAgoISO).lt('created_at', weekAgoISO),
-        // Recent scans with patient join
         supabase.from('scans')
           .select('id, predicted_class, uncertainty_level, status, created_at, patients(patient_code)')
           .order('created_at', { ascending: false })
           .limit(8),
-        // All scans for disease distribution
-        supabase.from('scans').select('predicted_class'),
-        // Monthly trend (last 6 months)
-        supabase.from('scans').select('created_at, confidence').gte('created_at',
-          new Date(new Date().setMonth(new Date().getMonth() - 6)).toISOString()
-        ),
       ])
 
-      // KPIs
       setKpi({
         totalScans:       totalRes.count       ?? 0,
         pendingReviews:   pendingRes.count      ?? 0,
@@ -181,7 +172,6 @@ export function Dashboard() {
         pendingLastWeek:    lastWeekPendingRes.count ?? 0,
       })
 
-      // Recent scans
       if (recentRes.data) {
         setRecentScans(
           recentRes.data.map((s: any) => ({
@@ -194,6 +184,18 @@ export function Dashboard() {
           }))
         )
       }
+
+      setLoading(false)
+
+      const [
+        allClassRes,
+        monthlyRes,
+      ] = await Promise.all([
+        supabase.from('scans').select('predicted_class'),
+        supabase.from('scans').select('created_at, confidence').gte('created_at',
+          new Date(new Date().setMonth(new Date().getMonth() - 6)).toISOString()
+        ),
+      ])
 
       // Disease distribution
       if (allClassRes.data) {
@@ -235,6 +237,7 @@ export function Dashboard() {
       setError(e instanceof Error ? e.message : 'Failed to load data')
     } finally {
       setLoading(false)
+      setChartsLoading(false)
       setRefreshing(false)
     }
   }
@@ -405,7 +408,7 @@ export function Dashboard() {
                 <CardTitle className="text-base font-semibold">Disease Distribution</CardTitle>
               </CardHeader>
               <CardContent>
-                {loading ? (
+                {chartsLoading ? (
                   <div className="space-y-2">
                     <Skeleton className="h-40 w-full rounded-lg" />
                     {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-4 w-full" />)}
@@ -459,7 +462,7 @@ export function Dashboard() {
                 <p className="text-xs text-muted-foreground mt-0.5">Total scans submitted per month</p>
               </CardHeader>
               <CardContent>
-                {loading ? <Skeleton className="h-48 w-full rounded-lg" /> : monthlyTrend.length === 0 ? (
+                {chartsLoading ? <Skeleton className="h-48 w-full rounded-lg" /> : monthlyTrend.length === 0 ? (
                   <div className="h-48 flex items-center justify-center text-muted-foreground/40 text-sm">
                     No data yet — scans will appear here automatically
                   </div>
@@ -488,7 +491,7 @@ export function Dashboard() {
                 <p className="text-xs text-muted-foreground mt-0.5">Mean ClaraVision-XAI confidence per month (%)</p>
               </CardHeader>
               <CardContent>
-                {loading ? <Skeleton className="h-48 w-full rounded-lg" /> : monthlyTrend.length === 0 ? (
+                {chartsLoading ? <Skeleton className="h-48 w-full rounded-lg" /> : monthlyTrend.length === 0 ? (
                   <div className="h-48 flex items-center justify-center text-muted-foreground/40 text-sm">
                     No data yet — confidence trends will appear here automatically
                   </div>
