@@ -213,9 +213,15 @@ export function Analyze() {
     if (!result || !user) return
     setSaving(true)
     try {
+      // Local accounts (admin demo or offline-registered) have no Supabase session
+      // and cannot write to the database. Only real Supabase-authenticated users can.
+      if (user.id === 'admin-local' || user.id.startsWith('local-')) {
+        throw new Error('Saving scans requires a Supabase-connected account. Please configure Supabase credentials and sign in with a clinician account.')
+      }
+
       const { data: authData, error: authError } = await supabase.auth.getUser()
       if (authError || !authData.user) {
-        throw new Error('Sign in with a Supabase clinician account before saving scans. The local admin demo account cannot write patient records.')
+        throw new Error('Your session has expired. Please sign out and sign in again to save scans.')
       }
 
       const { error } = await supabase.from('scans').insert({
