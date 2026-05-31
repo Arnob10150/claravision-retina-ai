@@ -1,0 +1,25 @@
+{
+  "Diabetic Retinopathy": {
+    "concepts": {
+      "Microaneurysms": "Small microaneurysm-like activations support diabetic retinal change.",
+      "Hemorrhages": "Hemorrhage-like regions increase suspicion for diabetic retinopathy.",
+      "Hard exudates": "Exudate-like activations are consistent with diabetic retinal pathology."
+    }
+  },
+  "Media Hazy": {
+    "concepts": {
+      "Media opacity": "Diffuse low-quality or opacity-related evidence supports a media-hazy interpretation."
+    }
+  },
+  "Myopic Retinopathy": {
+    "concepts": {
+      "Macular changes": "Macular-region changes support a myopic retinopathy hypothesis."
+    }
+  },
+  "Optic Disc Disorder": {
+    "concepts": {
+      "Cup-to-disc ratio enlargement": "Disc-structure evidence supports optic-disc abnormality.",
+      "Optic disc pallor": "Optic-disc pallor evidence supports optic-disc disorder."
+    }
+  }
+}

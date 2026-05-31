@@ -1,0 +1,465 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-chart-6: var(--chart-6);
+  --color-chart-7: var(--chart-7);
+  --color-chart-8: var(--chart-8);
+  --color-chart-9: var(--chart-9);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+/*
+  ============================================================
+  CLARARETINA THEME — Clinical · Trustworthy · Precise
+  Primary: Deep Teal  #0F6E56  oklch(0.44 0.10 163)
+  Accent : Blue       #185FA5
+  Base   : Warm neutrals + true white cards
+  ============================================================
+*/
+
+:root {
+  --radius: 0.75rem;
+
+  --background: oklch(0.97 0.005 75);
+  --foreground: oklch(0.22 0.004 75);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.22 0.004 75);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.22 0.004 75);
+  --primary: oklch(0.44 0.10 163);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.96 0.03 163);
+  --secondary-foreground: oklch(0.33 0.08 163);
+  --muted: oklch(0.95 0.005 75);
+  --muted-foreground: oklch(0.44 0.004 75);
+  --accent: oklch(0.96 0.03 163);
+  --accent-foreground: oklch(0.33 0.08 163);
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.91 0.008 75);
+  --input: oklch(0.91 0.008 75);
+  --ring: oklch(0.44 0.10 163);
+
+  --chart-1: oklch(0.44 0.10 163);
+  --chart-2: oklch(0.43 0.13 245);
+  --chart-3: oklch(0.62 0.15 55);
+  --chart-4: oklch(0.55 0.18 25);
+  --chart-5: oklch(0.52 0.14 295);
+  --chart-6: oklch(0.56 0.16 130);
+  --chart-7: oklch(0.60 0.14 190);
+  --chart-8: oklch(0.58 0.17 15);
+  --chart-9: oklch(0.48 0.12 270);
+
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: oklch(0.22 0.004 75);
+  --sidebar-primary: oklch(0.44 0.10 163);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.96 0.03 163);
+  --sidebar-accent-foreground: oklch(0.33 0.08 163);
+  --sidebar-border: oklch(0.91 0.008 75);
+  --sidebar-ring: oklch(0.44 0.10 163);
+}
+
+.dark {
+  --background: oklch(0.13 0.003 75);
+  --foreground: oklch(0.97 0.005 75);
+  --card: oklch(0.18 0.003 75);
+  --card-foreground: oklch(0.97 0.005 75);
+  --popover: oklch(0.20 0.003 75);
+  --popover-foreground: oklch(0.97 0.005 75);
+  --primary: oklch(0.60 0.10 163);
+  --primary-foreground: oklch(0.10 0.005 163);
+  --secondary: oklch(0.22 0.004 163);
+  --secondary-foreground: oklch(0.85 0.06 163);
+  --muted: oklch(0.22 0.003 75);
+  --muted-foreground: oklch(0.60 0.004 75);
+  --accent: oklch(0.22 0.004 163);
+  --accent-foreground: oklch(0.85 0.06 163);
+  --destructive: oklch(0.65 0.20 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.60 0.10 163);
+
+  --chart-1: oklch(0.60 0.10 163);
+  --chart-2: oklch(0.58 0.13 245);
+  --chart-3: oklch(0.72 0.14 75);
+  --chart-4: oklch(0.67 0.18 25);
+  --chart-5: oklch(0.65 0.14 295);
+  --chart-6: oklch(0.65 0.15 130);
+  --chart-7: oklch(0.68 0.12 190);
+  --chart-8: oklch(0.67 0.17 15);
+  --chart-9: oklch(0.60 0.12 270);
+
+  --sidebar: oklch(0.16 0.003 75);
+  --sidebar-foreground: oklch(0.97 0.005 75);
+  --sidebar-primary: oklch(0.60 0.10 163);
+  --sidebar-primary-foreground: oklch(0.10 0.005 163);
+  --sidebar-accent: oklch(0.22 0.004 163);
+  --sidebar-accent-foreground: oklch(0.85 0.06 163);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.60 0.10 163);
+}
+
+@layer base {
+  * { @apply border-border; }
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Inter", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  /* Smooth scrolling */
+  html { scroll-behavior: smooth; }
+  /* Selection highlight */
+  ::selection { background: oklch(0.44 0.10 163 / 0.2); }
+}
+
+/* ============================================================
+   SCAN LINE — ClaraVision analysis pipeline indicator
+   ============================================================ */
+
+@keyframes scan-line {
+  0%   { top: -2%; opacity: 0; }
+  4%   { opacity: 1; }
+  96%  { opacity: 1; }
+  100% { top: 102%; opacity: 0; }
+}
+
+.scan-line-anim {
+  position: absolute;
+  animation: scan-line 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* ============================================================
+   FADE / SLIDE — Page entry animations
+   ============================================================ */
+
+@keyframes fade-slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fade-slide-up { animation: fade-slide-up 0.35s ease-out both; }
+
+.stagger-1 { animation-delay: 0ms; }
+.stagger-2 { animation-delay: 55ms; }
+.stagger-3 { animation-delay: 110ms; }
+.stagger-4 { animation-delay: 165ms; }
+.stagger-5 { animation-delay: 220ms; }
+.stagger-6 { animation-delay: 275ms; }
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.slide-down { animation: slide-down 0.28s ease-out both; }
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.slide-in-right { animation: slide-in-right 0.35s ease-out both; }
+
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.slide-in-left { animation: slide-in-left 0.35s ease-out both; }
+
+/* ============================================================
+   CHECK / SUCCESS pop
+   ============================================================ */
+
+@keyframes check-pop {
+  0%   { transform: scale(0.3); opacity: 0; }
+  60%  { transform: scale(1.18); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.check-pop { animation: check-pop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+/* ============================================================
+   HEATMAP — Grad-CAM overlay pulse
+   ============================================================ */
+
+@keyframes heatmap-pulse {
+  0%, 100% { opacity: 0.48; }
+  50%       { opacity: 0.70; }
+}
+.heatmap-pulse { animation: heatmap-pulse 2.2s ease-in-out infinite; }
+
+@keyframes heatmap-focus {
+  0%, 100% { opacity: 0.45; transform: scale(1); }
+  50%       { opacity: 0.78; transform: scale(1.12); }
+}
+.animate-heatmap-focus { animation: heatmap-focus 2.2s ease-in-out infinite; }
+
+/* ============================================================
+   HERO BACKGROUND — Atmospheric orbs
+   ============================================================ */
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.18; transform: scale(1); }
+  50%       { opacity: 0.30; transform: scale(1.06); }
+}
+.animate-pulse-slow { animation: pulse-slow 9s ease-in-out infinite; }
+
+@keyframes breathe {
+  0%, 100% { opacity: 0.07; transform: scale(0.94); }
+  50%       { opacity: 0.14; transform: scale(1.06); }
+}
+.animate-breathe { animation: breathe 13s ease-in-out infinite; }
+
+/* ============================================================
+   FLOATING PARTICLES
+   ============================================================ */
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) translateX(0); opacity: 0.35; }
+  25%       { transform: translateY(-18px) translateX(8px); opacity: 0.55; }
+  50%       { transform: translateY(-10px) translateX(-6px); opacity: 0.45; }
+  75%       { transform: translateY(-24px) translateX(12px); opacity: 0.65; }
+}
+.animate-float { animation: float 4.5s ease-in-out infinite; }
+
+/* ============================================================
+   SCROLL INDICATOR
+   ============================================================ */
+
+@keyframes scroll-dot {
+  0%   { opacity: 1; transform: translateY(0); }
+  75%  { opacity: 0.2; transform: translateY(16px); }
+  100% { opacity: 0; transform: translateY(18px); }
+}
+.animate-scroll-dot { animation: scroll-dot 2s ease-in-out infinite; }
+
+/* ============================================================
+   SHIMMER — Loading skeleton
+   ============================================================ */
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--muted) 0%,
+    oklch(0.90 0.005 75) 50%,
+    var(--muted) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+
+/* ============================================================
+   EYE BLINK — Used in eye SVG animations
+   ============================================================ */
+
+@keyframes eye-blink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  95%            { transform: scaleY(0.05); }
+}
+.animate-eye-blink { animation: eye-blink 4.5s ease-in-out infinite; transform-origin: center; }
+
+/* ============================================================
+   PULSE RING — Notification / referral alert ring
+   ============================================================ */
+
+@keyframes pulse-ring {
+  0%   { transform: scale(0.95); box-shadow: 0 0 0 0 oklch(0.44 0.10 163 / 0.5); }
+  70%  { transform: scale(1); box-shadow: 0 0 0 10px oklch(0.44 0.10 163 / 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 oklch(0.44 0.10 163 / 0); }
+}
+.animate-pulse-ring { animation: pulse-ring 2s ease-out infinite; }
+
+@keyframes pulse-ring-destructive {
+  0%   { box-shadow: 0 0 0 0 oklch(0.55 0.22 25 / 0.5); }
+  70%  { box-shadow: 0 0 0 10px oklch(0.55 0.22 25 / 0); }
+  100% { box-shadow: 0 0 0 0 oklch(0.55 0.22 25 / 0); }
+}
+.animate-pulse-ring-red { animation: pulse-ring-destructive 2s ease-out infinite; }
+
+/* ============================================================
+   CARD HOVER — Lift effect
+   ============================================================ */
+
+@keyframes card-lift {
+  from { transform: translateY(0); box-shadow: none; }
+  to   { transform: translateY(-4px); box-shadow: 0 16px 32px -8px oklch(0 0 0 / 0.12); }
+}
+
+/* ============================================================
+   PROGRESS BAR — Animated fill for analysis bars
+   ============================================================ */
+
+@keyframes bar-fill {
+  from { width: 0%; }
+  to   { width: var(--bar-width, 100%); }
+}
+.animate-bar-fill {
+  animation: bar-fill 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ============================================================
+   DOCTOR / NURSE CHARACTER — Breathing
+   ============================================================ */
+
+@keyframes character-breathe {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-4px); }
+}
+.animate-character-breathe { animation: character-breathe 3.5s ease-in-out infinite; }
+
+/* ============================================================
+   GRADIENT TEXT
+   ============================================================ */
+
+.gradient-text {
+  background: linear-gradient(135deg, oklch(0.44 0.10 163), oklch(0.60 0.15 180), oklch(0.55 0.15 150));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================================
+   GLASSMORPHISM CARD
+   ============================================================ */
+
+.glass-card {
+  background: oklch(1 0 0 / 0.08);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid oklch(1 0 0 / 0.15);
+}
+.dark .glass-card {
+  background: oklch(1 0 0 / 0.05);
+  border-color: oklch(1 0 0 / 0.10);
+}
+
+/* ============================================================
+   ANIMATION DELAY UTILITIES
+   ============================================================ */
+
+.animation-delay-100  { animation-delay: 100ms; }
+.animation-delay-200  { animation-delay: 200ms; }
+.animation-delay-300  { animation-delay: 300ms; }
+.animation-delay-400  { animation-delay: 400ms; }
+.animation-delay-500  { animation-delay: 500ms; }
+.animation-delay-600  { animation-delay: 600ms; }
+.animation-delay-800  { animation-delay: 800ms; }
+.animation-delay-1000 { animation-delay: 1000ms; }
+.animation-delay-1500 { animation-delay: 1500ms; }
+.animation-delay-2000 { animation-delay: 2000ms; }
+
+/* ============================================================
+   MOBILE RESPONSIVE — Ensure full feature parity
+   ============================================================ */
+
+/* Touch targets: minimum 44px for all interactive elements on mobile */
+@media (max-width: 640px) {
+  button, [role="button"], a {
+    min-height: 40px;
+  }
+
+  /* Ensure cards stack cleanly */
+  .grid { gap: 0.75rem; }
+
+  /* Tighten spacing on small screens */
+  .space-y-5 { row-gap: 0.875rem; }
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================================
+   PRINT STYLES — Used by PDF report generation
+   ============================================================ */
+
+@media print {
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color: #000 !important;
+    background: #fff !important;
+  }
+
+  /* Hide non-report elements when printing */
+  header, nav, aside, footer,
+  [data-no-print],
+  .sidebar, .topbar {
+    display: none !important;
+  }
+
+  .print-report {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  @page {
+    margin: 20mm 16mm;
+    size: A4 portrait;
+  }
+}
+
+/* ============================================================
+   SCROLLBAR — Styled for clinical aesthetic
+   ============================================================ */
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: oklch(0.44 0.10 163 / 0.25);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.44 0.10 163 / 0.45);
+}
