@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class Probability(BaseModel):
@@ -27,6 +27,7 @@ class DifferentialDiagnosis(BaseModel):
 
 
 class EvidenceRequest(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
     predicted_class: str
     confidence: float
     uncertainty_score: float
