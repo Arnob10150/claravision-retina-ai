@@ -3,14 +3,44 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL || '') as string
 const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || '') as string
 
-export const supabase = createClient(
-  supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder-anon-key',
-)
+const _ready =
+  !!supabaseUrl &&
+  supabaseUrl.startsWith('https://') &&
+  supabaseUrl.includes('.supabase.co') &&
+  supabaseUrl !== 'https://placeholder.supabase.co'
 
 /** True once the real Supabase credentials are provided */
-export const isSupabaseReady = () =>
-  !!supabaseUrl && supabaseUrl.startsWith('https://') && supabaseUrl.includes('.supabase.co')
+export const isSupabaseReady = () => _ready
+
+// When credentials are not configured, return a no-op client so no network
+// requests are made to placeholder.supabase.co.
+function createMockClient() {
+  const empty = { data: null, error: null, count: null }
+  const qb: any = new Proxy(
+    {},
+    {
+      get(_, prop: string) {
+        if (prop === 'then') return (res: (v: typeof empty) => unknown) => Promise.resolve(empty).then(res)
+        if (prop === 'catch') return () => Promise.resolve(empty)
+        return () => qb
+      },
+    },
+  )
+  return {
+    from: () => qb,
+    auth: {
+      getSession:          () => Promise.resolve({ data: { session: null }, error: null }),
+      onAuthStateChange:   () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+      signInWithPassword:  () => Promise.resolve({ data: null, error: { message: 'Supabase not configured' } }),
+      signUp:              () => Promise.resolve({ data: null, error: { message: 'Supabase not configured' } }),
+      signOut:             () => Promise.resolve({ error: null }),
+    },
+  }
+}
+
+export const supabase = _ready
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : (createMockClient() as unknown as ReturnType<typeof createClient>)
 
 // ─── Database types ───────────────────────────────────────────────────────────
 
