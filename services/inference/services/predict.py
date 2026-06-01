@@ -70,14 +70,21 @@ def _load_torch_model():
 
     path = Path(MODEL_PATH)
     if not path.exists():
-        raise FileNotFoundError(f"MODEL_PATH does not exist: {path}")
+        print(f"[ClaraVision] Model file not found: {path} — using fallback predictor")
+        return None
+
+    # Git LFS pointer files are ~130 bytes. A real model is always several MB.
+    if path.stat().st_size < 10_000:
+        print(f"[ClaraVision] Model file looks like a Git LFS pointer ({path.stat().st_size} bytes) — LFS objects were not pulled. Using fallback predictor.")
+        return None
 
     import torch
 
     from services.fusion_model import ClaraVisionChampion
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    checkpoint = torch.load(path, map_location=device)
+    print(f"[ClaraVision] Loading model from {path} on {device}")
+    checkpoint = torch.load(path, map_location=device, weights_only=False)
     class_names = checkpoint.get("class_names") or CLASSES
     state_dict = checkpoint.get("state_dict", checkpoint)
 
@@ -87,6 +94,7 @@ def _load_torch_model():
     model = ClaraVisionChampion()
     model.load_state_dict(state_dict, strict=True)
     model.to(device).eval()
+    print(f"[ClaraVision] Model loaded successfully — {len(class_names)} classes")
 
     return {"model": model, "device": device, "class_names": class_names, "torch": torch}
 
