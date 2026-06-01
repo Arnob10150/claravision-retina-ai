@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { UncertaintyBadge } from '@/components/shared/UncertaintyBadge'
-import { supabase } from '@/lib/supabase'
+import { supabase, isSupabaseReady } from '@/lib/supabase'
 import { formatDistanceToNow } from 'date-fns'
 import { cn } from '@/lib/utils'
 
@@ -45,6 +45,7 @@ export function Scans() {
   const patientFilter = searchParams.get('patient')
 
   async function loadData(showRefresh = false) {
+    if (!isSupabaseReady()) { setLoading(false); setRefreshing(false); return }
     if (showRefresh) setRefreshing(true); else setLoading(true)
     try {
       let q = supabase

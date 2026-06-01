@@ -16,7 +16,7 @@ import {
 } from 'recharts'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { UncertaintyBadge } from '@/components/shared/UncertaintyBadge'
-import { supabase } from '@/lib/supabase'
+import { supabase, isSupabaseReady } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { formatDistanceToNow } from 'date-fns'
 
@@ -120,6 +120,11 @@ export function Dashboard() {
   const [refreshing, setRefreshing] = useState(false)
 
   async function loadData(showRefresh = false) {
+    if (!isSupabaseReady()) {
+      setLoading(false)
+      setChartsLoading(false)
+      return
+    }
     if (showRefresh) setRefreshing(true)
     else {
       setLoading(true)

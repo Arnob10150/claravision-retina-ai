@@ -21,7 +21,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle
 } from '@/components/ui/alert-dialog'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
-import { supabase } from '@/lib/supabase'
+import { supabase, isSupabaseReady } from '@/lib/supabase'
 import { useAuthStore } from '@/store/useUIStore'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -68,6 +68,7 @@ function UsersTab() {
   const [saving, setSaving]     = useState(false)
 
   const load = useCallback(async () => {
+    if (!isSupabaseReady()) { setLoading(false); return }
     setLoading(true)
     const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false })
     setRows(data ?? [])
@@ -226,6 +227,7 @@ function PatientsTab() {
   const [form, setForm] = useState(BLANK)
 
   const load = useCallback(async () => {
+    if (!isSupabaseReady()) { setLoading(false); return }
     setLoading(true)
     const { data } = await supabase.from('patients').select('*').order('created_at', { ascending: false })
     setRows(data ?? [])
@@ -427,6 +429,7 @@ function ScansTab() {
   const [updatingId, setUpdatingId]     = useState<string | null>(null)
 
   const load = useCallback(async () => {
+    if (!isSupabaseReady()) { setLoading(false); return }
     setLoading(true)
     const { data } = await supabase
       .from('scans')
@@ -567,6 +570,7 @@ function DBStats() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!isSupabaseReady()) { setLoading(false); return }
     Promise.all([
       supabase.from('profiles').select('*', { count: 'exact', head: true }),
       supabase.from('patients').select('*', { count: 'exact', head: true }),

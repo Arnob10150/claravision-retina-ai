@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { UncertaintyBadge } from '@/components/shared/UncertaintyBadge'
-import { supabase } from '@/lib/supabase'
+import { supabase, isSupabaseReady } from '@/lib/supabase'
 import { formatDistanceToNow } from 'date-fns'
 import { cn } from '@/lib/utils'
 
@@ -33,6 +33,7 @@ export function Patients() {
   const navigate = useNavigate()
 
   async function loadData(showRefresh = false) {
+    if (!isSupabaseReady()) { setLoading(false); setRefreshing(false); return }
     if (showRefresh) setRefreshing(true)
     else setLoading(true)
 

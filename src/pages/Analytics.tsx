@@ -11,7 +11,7 @@ import {
   PieChart, Pie, Cell, LineChart, Line, Legend,
 } from 'recharts'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
-import { supabase } from '@/lib/supabase'
+import { supabase, isSupabaseReady } from '@/lib/supabase'
 
 const CHART_COLORS = [
   'var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)',
@@ -53,6 +53,11 @@ export function Analytics() {
   const [agreementData, setAgreementData] = useState<{ name: string; value: number; color: string }[]>([])
 
   async function loadData(showRefresh = false) {
+    if (!isSupabaseReady()) {
+      setLoading(false)
+      setRefreshing(false)
+      return
+    }
     if (showRefresh) setRefreshing(true)
     else setLoading(true)
 
