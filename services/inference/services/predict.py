@@ -133,16 +133,15 @@ def _predict_with_torch(image_bytes: bytes) -> tuple[list[str], np.ndarray, floa
             output = model(x)
 
             if isinstance(output, dict):
-                # EDL model — use alpha for calibrated probabilities and real uncertainty
-                alpha = output["alpha"].squeeze(0)           # shape: (num_classes,)
-                probs = (alpha / alpha.sum()).detach().cpu().numpy()
-                # Dirichlet uncertainty: K / sum(alpha), normalised to [0, 1]
+                logits = output["logits"]
+                alpha  = output["alpha"].squeeze(0)
+                # Probabilities: softmax(logits) — matches the CE training objective
+                probs = torch.softmax(logits, dim=1).squeeze(0).detach().cpu().numpy()
+                # Uncertainty: real Dirichlet value from the model, normalised to [0,1]
                 uncertainty_val = float(
-                    (len(class_names) / alpha.sum()).detach().cpu().item()
+                    min(1.0, (len(class_names) / alpha.sum()).detach().cpu().item())
                 )
-                uncertainty_val = max(0.0, min(1.0, uncertainty_val))
             else:
-                # Plain classifier fallback
                 probs = torch.softmax(output, dim=1).squeeze(0).detach().cpu().numpy()
                 uncertainty_val = float(1.0 - probs.max())
 
