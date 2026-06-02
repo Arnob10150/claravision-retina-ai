@@ -1,5 +1,2 @@
 [phases.setup]
-nixPkgs = ["python311", "gcc", "git-lfs"]
-
-[phases.build]
-cmds = ["git lfs pull"]
+nixPkgs = ["python311", "gcc"]
