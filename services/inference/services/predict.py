@@ -99,12 +99,13 @@ def _load_torch_model():
     return {"model": model, "device": device, "class_names": class_names, "torch": torch}
 
 
-def _predict_with_torch(image_bytes: bytes) -> tuple[list[str], np.ndarray] | None:
+def _predict_with_torch(image_bytes: bytes) -> tuple[list[str], np.ndarray, float] | None:
     bundle = _load_torch_model()
     if bundle is None:
         return None
 
     from torchvision import transforms
+    from PIL import ImageOps
 
     model = bundle["model"]
     device = bundle["device"]
@@ -119,14 +120,39 @@ def _predict_with_torch(image_bytes: bytes) -> tuple[list[str], np.ndarray] | No
         ]
     )
 
-    x = tf(_pil_from_bytes(image_bytes)).unsqueeze(0).to(device)
-    with torch.no_grad():
-        logits = model(x)
-        if isinstance(logits, dict):
-            logits = logits["logits"]
-        probs = torch.softmax(logits, dim=1).squeeze(0).detach().cpu().numpy()
+    pil_img = _pil_from_bytes(image_bytes)
+    # TTA: average over original + horizontal flip (fundus L/R symmetry)
+    augmented = [pil_img, ImageOps.mirror(pil_img)]
 
-    return list(class_names), probs.astype("float32")
+    all_probs = []
+    all_uncertainty = []
+
+    with torch.no_grad():
+        for aug in augmented:
+            x = tf(aug).unsqueeze(0).to(device)
+            output = model(x)
+
+            if isinstance(output, dict):
+                # EDL model — use alpha for calibrated probabilities and real uncertainty
+                alpha = output["alpha"].squeeze(0)           # shape: (num_classes,)
+                probs = (alpha / alpha.sum()).detach().cpu().numpy()
+                # Dirichlet uncertainty: K / sum(alpha), normalised to [0, 1]
+                uncertainty_val = float(
+                    (len(class_names) / alpha.sum()).detach().cpu().item()
+                )
+                uncertainty_val = max(0.0, min(1.0, uncertainty_val))
+            else:
+                # Plain classifier fallback
+                probs = torch.softmax(output, dim=1).squeeze(0).detach().cpu().numpy()
+                uncertainty_val = float(1.0 - probs.max())
+
+            all_probs.append(probs)
+            all_uncertainty.append(uncertainty_val)
+
+    avg_probs = np.mean(all_probs, axis=0).astype("float32")
+    avg_uncertainty = float(np.mean(all_uncertainty))
+
+    return list(class_names), avg_probs, avg_uncertainty
 
 
 def _concept_scores(pred_idx: int, confidence: float, quality: float) -> list[dict]:
@@ -137,12 +163,23 @@ def _concept_scores(pred_idx: int, confidence: float, quality: float) -> list[di
     return concept_scores[:3]
 
 
-def _build_prediction(image_bytes: bytes, labels: list[str], probs: np.ndarray, model_version: str) -> dict:
+def _build_prediction(
+    image_bytes: bytes,
+    labels: list[str],
+    probs: np.ndarray,
+    model_version: str,
+    uncertainty_override: float | None = None,
+) -> dict:
     rgb = load_rgb(image_bytes)
     q = quality_score(rgb)
     pred_idx = int(np.argmax(probs))
     confidence = float(probs[pred_idx])
-    uncertainty = float(max(0.02, min(0.95, (1.0 - confidence) * (1.15 - 0.35 * q))))
+
+    if uncertainty_override is not None:
+        uncertainty = float(max(0.02, min(0.95, uncertainty_override)))
+    else:
+        uncertainty = float(max(0.02, min(0.95, (1.0 - confidence) * (1.15 - 0.35 * q))))
+
     level = "low" if uncertainty < 0.18 else "medium" if uncertainty < 0.38 else "high"
 
     return {
@@ -163,8 +200,8 @@ def predict_bytes(image_bytes: bytes) -> dict:
     trained = _predict_with_torch(image_bytes)
 
     if trained is not None:
-        labels, probs = trained
-        prediction = _build_prediction(image_bytes, labels, probs, MODEL_VERSION)
+        labels, probs, uncertainty = trained
+        prediction = _build_prediction(image_bytes, labels, probs, MODEL_VERSION, uncertainty)
     else:
         rgb = load_rgb(image_bytes)
         q = quality_score(rgb)
