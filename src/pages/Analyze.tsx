@@ -226,14 +226,6 @@ export function Analyze() {
       return
     }
 
-    if (result.analysis_id.startsWith('LOCAL-')) {
-      play('error')
-      toast.error('Cannot save demo result', {
-        description: 'Start the inference service to produce real results that can be saved.',
-      })
-      return
-    }
-
     if (!isSupabaseReady()) {
       play('error')
       toast.error('Supabase not configured', {
@@ -560,13 +552,10 @@ export function Analyze() {
                             !user ||
                             user.id === 'admin-local' ||
                             user.id.startsWith('local-') ||
-                            result.analysis_id.startsWith('LOCAL-') ||
                             !isSupabaseReady()
                           }
                           title={
-                            result.analysis_id.startsWith('LOCAL-')
-                              ? 'Demo result — start the inference API to save real scans'
-                              : !user
+                            !user
                               ? 'Sign in to save scans'
                               : user.id === 'admin-local' || user.id.startsWith('local-')
                               ? 'Demo accounts cannot save — connect Supabase'
