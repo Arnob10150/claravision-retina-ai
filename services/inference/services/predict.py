@@ -2,6 +2,7 @@ import base64
 import hashlib
 import os
 import time
+import urllib.request
 from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
@@ -11,6 +12,37 @@ import numpy as np
 from PIL import Image
 
 from services.preprocess import load_rgb, quality_score
+
+# GitHub media URL serves actual LFS file content without needing git-lfs installed.
+# Format: https://media.githubusercontent.com/media/{owner}/{repo}/{branch}/{path}
+_GITHUB_MEDIA_BASE = (
+    "https://media.githubusercontent.com/media/"
+    "Arnob10150/claravision-retina-ai/main/services/inference"
+)
+
+_LFS_POINTER_MAX_BYTES = 10_000  # Real models are always several MB
+
+
+def _download_model(path: Path) -> bool:
+    """Download the real model binary from GitHub media (bypasses git-lfs)."""
+    url = f"{_GITHUB_MEDIA_BASE}/models/{path.name}"
+    print(f"[ClaraVision] LFS pointer detected — downloading real model from GitHub...")
+    print(f"[ClaraVision] URL: {url}")
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = path.with_suffix(".tmp")
+        urllib.request.urlretrieve(url, tmp)
+        size_mb = tmp.stat().st_size / (1024 * 1024)
+        if size_mb < 1:
+            tmp.unlink(missing_ok=True)
+            print(f"[ClaraVision] Download too small ({size_mb:.2f} MB) — URL may be wrong")
+            return False
+        tmp.rename(path)
+        print(f"[ClaraVision] Downloaded {size_mb:.1f} MB → {path}")
+        return True
+    except Exception as e:
+        print(f"[ClaraVision] Download failed: {e}")
+        return False
 
 
 CLASSES = [
@@ -74,9 +106,11 @@ def _load_torch_model():
         return None
 
     # Git LFS pointer files are ~130 bytes. A real model is always several MB.
-    if path.stat().st_size < 10_000:
-        print(f"[ClaraVision] Model file looks like a Git LFS pointer ({path.stat().st_size} bytes) — LFS objects were not pulled. Using fallback predictor.")
-        return None
+    if path.stat().st_size < _LFS_POINTER_MAX_BYTES:
+        print(f"[ClaraVision] LFS pointer detected ({path.stat().st_size} bytes) — fetching real weights...")
+        if not _download_model(path):
+            print(f"[ClaraVision] Could not obtain real model — using fallback predictor.")
+            return None
 
     import torch
 
