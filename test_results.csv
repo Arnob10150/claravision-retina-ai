@@ -1,0 +1,91 @@
+﻿file,true_label,predicted,confidence,uncertainty,correct
+128753_left.png,Diabetic Retinopathy,Normal,0.31962114572525024,high,False
+128820_right.png,Diabetic Retinopathy,Diabetic Retinopathy,0.31268227100372314,high,True
+128896_left.png,Diabetic Retinopathy,Diabetic Retinopathy,0.33535143733024597,high,True
+128896_right.png,Diabetic Retinopathy,Optic Disc Disorder,0.3410845994949341,high,False
+129002_right.png,Diabetic Retinopathy,Myopic Retinopathy,0.3465488851070404,high,False
+129166_left.png,Diabetic Retinopathy,Media Hazy,0.5003809928894043,high,False
+129199_left.png,Diabetic Retinopathy,Normal,0.32736510038375854,high,False
+129199_right.png,Diabetic Retinopathy,Myopic Retinopathy,0.36383354663848877,high,False
+129227_left.png,Diabetic Retinopathy,Optic Disc Disorder,0.3099600672721863,high,False
+129227_right.png,Diabetic Retinopathy,Myopic Retinopathy,0.48222655057907104,high,False
+129405_left.png,Diabetic Retinopathy,Myopic Retinopathy,0.29466429352760315,high,False
+129405_right.png,Diabetic Retinopathy,Diabetic Retinopathy,0.4284991919994354,high,True
+129439_left.png,Diabetic Retinopathy,Media Hazy,0.3232792317867279,high,False
+129439_right.png,Diabetic Retinopathy,Optic Disc Disorder,0.27372121810913086,high,False
+130196_left.png,Diabetic Retinopathy,Optic Disc Disorder,0.5038154721260071,high,False
+130196_right.png,Diabetic Retinopathy,Diabetic Retinopathy,0.29695960879325867,high,True
+130497_left.png,Diabetic Retinopathy,Myopic Retinopathy,0.3379470705986023,high,False
+130497_right.png,Diabetic Retinopathy,Myopic Retinopathy,0.4781750738620758,high,False
+130756_left.png,Diabetic Retinopathy,Media Hazy,0.3658101558685303,high,False
+130756_right.png,Diabetic Retinopathy,Myopic Retinopathy,0.3434242010116577,high,False
+130905_left.png,Diabetic Retinopathy,Optic Disc Disorder,0.40548068284988403,high,False
+13430_left.png,Diabetic Retinopathy,Myopic Retinopathy,0.3341957628726959,high,False
+13430_right.png,Diabetic Retinopathy,Media Hazy,0.43140876293182373,high,False
+138139_left.png,Diabetic Retinopathy,Media Hazy,0.39182236790657043,high,False
+138727_right.png,Diabetic Retinopathy,Diabetic Retinopathy,0.2706495523452759,high,True
+138754_left.png,Diabetic Retinopathy,Normal,0.43399834632873535,high,False
+138875_left.png,Diabetic Retinopathy,Media Hazy,0.37739843130111694,high,False
+13940_left.png,Diabetic Retinopathy,Diabetic Retinopathy,0.33152222633361816,high,True
+139891_left.png,Diabetic Retinopathy,Diabetic Retinopathy,0.4635549485683441,high,True
+139891_right.png,Diabetic Retinopathy,Normal,0.31386885046958923,high,False
+140015_left.png,Diabetic Retinopathy,Optic Disc Disorder,0.38628774881362915,high,False
+140015_right.png,Diabetic Retinopathy,Normal,0.6258388757705688,medium,False
+140086_left.png,Diabetic Retinopathy,Normal,0.3131307363510132,high,False
+140086_right.png,Diabetic Retinopathy,Media Hazy,0.3311026394367218,high,False
+141494_right.png,Diabetic Retinopathy,Myopic Retinopathy,0.3327651917934418,high,False
+141632_right.png,Diabetic Retinopathy,Media Hazy,0.352314293384552,high,False
+141807_left.png,Diabetic Retinopathy,Myopic Retinopathy,0.36502939462661743,high,False
+141807_right.png,Diabetic Retinopathy,Media Hazy,0.44650328159332275,high,False
+185970_left.png,Diabetic Retinopathy,Diabetic Retinopathy,0.31617963314056396,high,True
+185970_right.png,Diabetic Retinopathy,Media Hazy,0.29895246028900146,high,False
+190906_left.png,Diabetic Retinopathy,Normal,0.6060169339179993,high,False
+190906_right.png,Diabetic Retinopathy,Diabetic Retinopathy,0.40145638585090637,high,True
+191895_left.png,Diabetic Retinopathy,Normal,0.5370258688926697,high,False
+191895_right.png,Diabetic Retinopathy,Normal,0.4454583525657654,high,False
+191969_left.png,Diabetic Retinopathy,Diabetic Retinopathy,0.44905927777290344,high,True
+191969_right.png,Diabetic Retinopathy,Diabetic Retinopathy,0.3745611608028412,high,True
+192093_right.png,Diabetic Retinopathy,Myopic Retinopathy,0.34285813570022583,high,False
+192421_left.png,Diabetic Retinopathy,Normal,0.38204124569892883,high,False
+192511_right.png,Diabetic Retinopathy,Diabetic Retinopathy,0.2890910804271698,high,True
+192517_left.png,Diabetic Retinopathy,Media Hazy,0.3310913145542145,high,False
+192517_right.png,Diabetic Retinopathy,Normal,0.3896476924419403,high,False
+192535_right.png,Diabetic Retinopathy,Myopic Retinopathy,0.3337421715259552,high,False
+192544_right.png,Diabetic Retinopathy,Normal,0.5374109148979187,high,False
+193074_right.png,Diabetic Retinopathy,Diabetic Retinopathy,0.49581003189086914,high,True
+193356_left.png,Diabetic Retinopathy,Normal,0.3791106939315796,high,False
+193356_right.png,Diabetic Retinopathy,Optic Disc Disorder,0.29119396209716797,high,False
+193392_left.png,Diabetic Retinopathy,Diabetic Retinopathy,0.2820838987827301,high,True
+193468_left.png,Diabetic Retinopathy,Diabetic Retinopathy,0.34979966282844543,high,True
+193657_right.png,Diabetic Retinopathy,Optic Disc Disorder,0.3031967580318451,high,False
+196466_left.png,Diabetic Retinopathy,Optic Disc Disorder,0.4218577444553375,high,False
+196579_left.png,Diabetic Retinopathy,Optic Disc Disorder,0.30334192514419556,high,False
+196579_right.png,Diabetic Retinopathy,Media Hazy,0.29022035002708435,high,False
+196745_left.png,Diabetic Retinopathy,Media Hazy,0.3953084349632263,high,False
+196745_right.png,Diabetic Retinopathy,Normal,0.30464670062065125,high,False
+196856_left.png,Diabetic Retinopathy,Myopic Retinopathy,0.31009089946746826,high,False
+196856_right.png,Diabetic Retinopathy,Diabetic Retinopathy,0.4541175365447998,high,True
+196996_left.png,Diabetic Retinopathy,Optic Disc Disorder,0.2692514955997467,high,False
+196996_right.png,Diabetic Retinopathy,Normal,0.39353036880493164,high,False
+197030_left.png,Diabetic Retinopathy,Normal,0.33896684646606445,high,False
+197030_right.png,Diabetic Retinopathy,Normal,0.6122020483016968,medium,False
+197034_left.png,Diabetic Retinopathy,Optic Disc Disorder,0.31197041273117065,high,False
+197034_right.png,Diabetic Retinopathy,Optic Disc Disorder,0.39296576380729675,high,False
+197040_left.png,Diabetic Retinopathy,Normal,0.3656979501247406,high,False
+197048_left.png,Diabetic Retinopathy,Normal,0.4369613230228424,high,False
+197048_right.png,Diabetic Retinopathy,Optic Disc Disorder,0.34019729495048523,high,False
+197167_left.png,Diabetic Retinopathy,Media Hazy,0.3891228437423706,high,False
+197184_left.png,Diabetic Retinopathy,Media Hazy,0.4231525957584381,high,False
+197184_right.png,Diabetic Retinopathy,Myopic Retinopathy,0.32102516293525696,high,False
+197292_left.png,Diabetic Retinopathy,Normal,0.3403244912624359,high,False
+197474_left.png,Diabetic Retinopathy,Normal,0.3821081519126892,high,False
+197474_right.png,Diabetic Retinopathy,Normal,0.3840193748474121,high,False
+197857_left.png,Diabetic Retinopathy,Media Hazy,0.27896738052368164,high,False
+197857_right.png,Diabetic Retinopathy,Normal,0.41444534063339233,high,False
+197863_left.png,Diabetic Retinopathy,Diabetic Retinopathy,0.478543758392334,high,True
+197863_right.png,Diabetic Retinopathy,Media Hazy,0.4135662019252777,high,False
+198233_left.png,Diabetic Retinopathy,Media Hazy,0.4684065282344818,high,False
+198233_right.png,Diabetic Retinopathy,Normal,0.3289221525192261,high,False
+198341_left.png,Diabetic Retinopathy,Diabetic Retinopathy,0.3420983552932739,high,True
+198341_right.png,Diabetic Retinopathy,Normal,0.37293916940689087,high,False
+198492_left.png,Diabetic Retinopathy,Normal,0.3494984805583954,high,False
