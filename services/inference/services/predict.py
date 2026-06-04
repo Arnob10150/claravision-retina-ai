@@ -114,10 +114,13 @@ def _load_torch_model():
 
     import torch
 
+    # Use all available CPU cores for inference
+    torch.set_num_threads(os.cpu_count() or 4)
+
     from services.fusion_model import ClaraVisionChampion
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"[ClaraVision] Loading model from {path} on {device}")
+    print(f"[ClaraVision] Loading model from {path} on {device} ({os.cpu_count()} CPU cores)")
     checkpoint = torch.load(path, map_location=device, weights_only=False)
     class_names = checkpoint.get("class_names") or CLASSES
     state_dict = checkpoint.get("state_dict", checkpoint)
@@ -139,7 +142,6 @@ def _predict_with_torch(image_bytes: bytes) -> tuple[list[str], np.ndarray, floa
         return None
 
     from torchvision import transforms
-    from PIL import ImageOps
 
     model = bundle["model"]
     device = bundle["device"]
@@ -154,38 +156,21 @@ def _predict_with_torch(image_bytes: bytes) -> tuple[list[str], np.ndarray, floa
         ]
     )
 
-    pil_img = _pil_from_bytes(image_bytes)
-    # TTA: average over original + horizontal flip (fundus L/R symmetry)
-    augmented = [pil_img, ImageOps.mirror(pil_img)]
+    x = tf(_pil_from_bytes(image_bytes)).unsqueeze(0).to(device)
 
-    all_probs = []
-    all_uncertainty = []
+    with torch.inference_mode():
+        output = model(x)
 
-    with torch.no_grad():
-        for aug in augmented:
-            x = tf(aug).unsqueeze(0).to(device)
-            output = model(x)
+    if isinstance(output, dict):
+        logits = output["logits"]
+        alpha  = output["alpha"].squeeze(0)
+        probs  = torch.softmax(logits, dim=1).squeeze(0).cpu().numpy()
+        uncertainty_val = float(min(1.0, (len(class_names) / alpha.sum()).cpu().item()))
+    else:
+        probs = torch.softmax(output, dim=1).squeeze(0).cpu().numpy()
+        uncertainty_val = float(1.0 - probs.max())
 
-            if isinstance(output, dict):
-                logits = output["logits"]
-                alpha  = output["alpha"].squeeze(0)
-                # Probabilities: softmax(logits) — matches the CE training objective
-                probs = torch.softmax(logits, dim=1).squeeze(0).detach().cpu().numpy()
-                # Uncertainty: real Dirichlet value from the model, normalised to [0,1]
-                uncertainty_val = float(
-                    min(1.0, (len(class_names) / alpha.sum()).detach().cpu().item())
-                )
-            else:
-                probs = torch.softmax(output, dim=1).squeeze(0).detach().cpu().numpy()
-                uncertainty_val = float(1.0 - probs.max())
-
-            all_probs.append(probs)
-            all_uncertainty.append(uncertainty_val)
-
-    avg_probs = np.mean(all_probs, axis=0).astype("float32")
-    avg_uncertainty = float(np.mean(all_uncertainty))
-
-    return list(class_names), avg_probs, avg_uncertainty
+    return list(class_names), probs.astype("float32"), uncertainty_val
 
 
 def _concept_scores(pred_idx: int, confidence: float, quality: float) -> list[dict]:

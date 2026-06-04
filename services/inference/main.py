@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, File, UploadFile, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -5,10 +6,19 @@ from pathlib import Path
 
 from evidence.engine import build_evidence
 from schemas import EvidenceRequest, PredictionResponse
-from services.predict import MODEL_PATH, MODEL_VERSION, predict_bytes
+from services.predict import MODEL_PATH, MODEL_VERSION, predict_bytes, _load_torch_model
 
 
-app = FastAPI(title="ClaraScope Inference API", version="0.1.0")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Eagerly download + load the model at startup so the first request is fast
+    import asyncio
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(None, _load_torch_model)
+    yield
+
+
+app = FastAPI(title="ClaraScope Inference API", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
