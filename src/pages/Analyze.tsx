@@ -23,7 +23,6 @@ import { deriveStage, urgencyToText, type TreatmentPriority } from '@/lib/clinic
 import { GradCamPanel } from '@/components/shared/GradCamPanel'
 import { ReferralLetter } from '@/components/shared/ReferralLetter'
 import { supabase, isSupabaseReady } from '@/lib/supabase'
-import { useAuthStore } from '@/store/useUIStore'
 import { useSound } from '@/hooks/useSound'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -135,7 +134,6 @@ export function Analyze() {
   const [stagingData, setStagingData] = useState<{ stage: any; guidance: any } | null>(null)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const { user } = useAuthStore()
   const { play } = useSound()
   const navigate = useNavigate()
 
