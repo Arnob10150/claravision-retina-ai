@@ -131,6 +131,7 @@ export function Analyze() {
   const [metadata, setMetadata] = useState({ age: '', gender: '', eye_side: '' })
   const [saving, setSaving] = useState(false)
   const [referralOpen, setReferralOpen] = useState(false)
+  const [showReferralAlert, setShowReferralAlert] = useState(true)
   const [stagingData, setStagingData] = useState<{ stage: any; guidance: any } | null>(null)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -143,6 +144,7 @@ export function Analyze() {
     if (!result) { setStagingData(null); return }
     const conceptNames = result.activated_concepts.map(c => c.name)
     setStagingData(deriveStage(result.predicted_class, result.confidence, conceptNames))
+    setShowReferralAlert(true)
   }, [result])
 
   // Cycle analysis step text during processing
@@ -212,20 +214,6 @@ export function Analyze() {
   async function saveToPatient() {
     if (!result) return
 
-    if (!user) {
-      play('error')
-      toast.error('Not signed in', { description: 'Please sign in to save scan results.' })
-      return
-    }
-
-    if (user.id === 'admin-local' || user.id.startsWith('local-')) {
-      play('error')
-      toast.error('Cannot save in demo mode', {
-        description: 'Connect Supabase and sign in with a clinician account to save scans.',
-      })
-      return
-    }
-
     if (!isSupabaseReady()) {
       play('error')
       toast.error('Supabase not configured', {
@@ -236,8 +224,13 @@ export function Analyze() {
 
     setSaving(true)
     try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        throw new Error('Not signed in. Please sign in to save scan results.')
+      }
+
       const { error } = await supabase.from('scans').insert({
-        uploaded_by: user.id,
+        uploaded_by: session.user.id,
         predicted_class: result.predicted_class,
         confidence: result.confidence,
         uncertainty_score: result.uncertainty_score,
@@ -260,8 +253,10 @@ export function Analyze() {
       navigate('/scans')
     } catch (error) {
       play('error')
+      console.error('[saveToPatient]', error)
       toast.error('Failed to save scan', {
         description: error instanceof Error ? error.message : 'Please try again.',
+        duration: 6000,
       })
     } finally {
       setSaving(false)
@@ -547,22 +542,7 @@ export function Analyze() {
                         <Button
                           size="sm"
                           onClick={saveToPatient}
-                          disabled={
-                            saving ||
-                            !user ||
-                            user.id === 'admin-local' ||
-                            user.id.startsWith('local-') ||
-                            !isSupabaseReady()
-                          }
-                          title={
-                            !user
-                              ? 'Sign in to save scans'
-                              : user.id === 'admin-local' || user.id.startsWith('local-')
-                              ? 'Demo accounts cannot save — connect Supabase'
-                              : !isSupabaseReady()
-                              ? 'Supabase not configured'
-                              : undefined
-                          }
+                          disabled={saving}
                         >
                           {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
                           Save
@@ -603,19 +583,27 @@ export function Analyze() {
 
                     {/* Referral alert */}
                     <AnimatePresence>
-                      {result.referral_flag && (
+                      {result.uncertainty_level === 'high' && showReferralAlert && (
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
                           className="mt-4 flex items-start gap-3 bg-destructive/8 border border-destructive/25 rounded-lg p-3.5"
                         >
                           <AlertTriangle className="size-4 text-destructive mt-0.5 shrink-0" />
-                          <div>
+                          <div className="flex-1">
                             <p className="text-sm font-semibold text-destructive">Senior Specialist Review Required</p>
                             <p className="text-xs text-destructive/80 mt-0.5">
                               High diagnostic uncertainty or high-risk pathology detected. This scan must be reviewed by a consultant ophthalmologist before any clinical decision or treatment plan.
                             </p>
                           </div>
+                          <button
+                            onClick={() => setShowReferralAlert(false)}
+                            className="text-destructive/60 hover:text-destructive shrink-0 mt-0.5"
+                            title="Dismiss"
+                          >
+                            <X className="size-4" />
+                          </button>
                         </motion.div>
                       )}
                     </AnimatePresence>
