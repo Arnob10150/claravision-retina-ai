@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { User, Bell, Volume2, VolumeX, Shield, Save, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -11,7 +11,9 @@ import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { useUIStore, useAuthStore } from '@/store/useUIStore'
+import { supabase } from '@/lib/supabase'
 import { useSound } from '@/hooks/useSound'
+import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
 const ROLES = [
@@ -24,21 +26,56 @@ const ROLES = [
 
 export function Settings() {
   const { soundEnabled, volume, setSoundEnabled, setVolume } = useUIStore()
-  const { profile } = useAuthStore()
+  const { profile, setProfile } = useAuthStore()
   const { play } = useSound()
 
-  const [fullName, setFullName] = useState(profile?.full_name ?? 'Dr. Sarah Chen')
-  const [institution, setInstitution] = useState(profile?.institution ?? 'City Eye Institute')
+  const [fullName, setFullName] = useState(profile?.full_name ?? '')
+  const [institution, setInstitution] = useState(profile?.institution ?? '')
   const [role, setRole] = useState(profile?.role ?? 'ophthalmologist')
-  const [email] = useState('sarah.chen@cityeye.org')
+  const [email, setEmail] = useState('')
+  const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [notifications, setNotifications] = useState(true)
   const [referralAlerts, setReferralAlerts] = useState(true)
 
-  const handleSave = () => {
-    setSaved(true)
-    play('analysisComplete')
-    setTimeout(() => setSaved(false), 2500)
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) setEmail(session.user.email ?? '')
+    })
+  }, [])
+
+  useEffect(() => {
+    if (profile) {
+      setFullName(profile.full_name ?? '')
+      setInstitution(profile.institution ?? '')
+      setRole(profile.role ?? 'ophthalmologist')
+    }
+  }, [profile])
+
+  async function handleSave() {
+    setSaving(true)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) { toast.error('Not signed in'); return }
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ full_name: fullName, institution, role, updated_at: new Date().toISOString() })
+        .eq('id', session.user.id)
+
+      if (error) throw error
+
+      setProfile({ full_name: fullName, institution, role, avatar_url: profile?.avatar_url ?? '' })
+      play('analysisComplete')
+      setSaved(true)
+      toast.success('Profile saved')
+      setTimeout(() => setSaved(false), 2500)
+    } catch (e) {
+      play('error')
+      toast.error('Failed to save', { description: e instanceof Error ? e.message : 'Please try again.' })
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -229,17 +266,13 @@ export function Settings() {
         {/* Save */}
         <div className="flex justify-end gap-3 pb-6">
           <Button variant="outline">Cancel</Button>
-          <Button onClick={handleSave} className="min-w-28 gap-2">
+          <Button onClick={handleSave} disabled={saving} className="min-w-28 gap-2">
             {saved ? (
-              <>
-                <Check className="size-4" />
-                Saved
-              </>
+              <><Check className="size-4" />Saved</>
+            ) : saving ? (
+              <><Save className="size-4 animate-pulse" />Saving…</>
             ) : (
-              <>
-                <Save className="size-4" />
-                Save changes
-              </>
+              <><Save className="size-4" />Save changes</>
             )}
           </Button>
         </div>

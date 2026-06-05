@@ -227,7 +227,22 @@ export function Analyze() {
         throw new Error('Not signed in. Please sign in to save scan results.')
       }
 
+      // Auto-create a patient record so it appears on the Patients page
+      const patientCode = `PT-${Date.now().toString(36).toUpperCase()}`
+      const { data: patient, error: patientError } = await supabase
+        .from('patients')
+        .insert({
+          patient_code: patientCode,
+          age: metadata.age ? parseInt(metadata.age) : null,
+          gender: metadata.gender || 'unknown',
+          created_by: session.user.id,
+        })
+        .select('id')
+        .single()
+      if (patientError) throw patientError
+
       const { error } = await supabase.from('scans').insert({
+        patient_id: patient.id,
         uploaded_by: session.user.id,
         predicted_class: result.predicted_class,
         confidence: result.confidence,
@@ -247,8 +262,8 @@ export function Analyze() {
       })
       if (error) throw error
       play('analysisComplete')
-      toast.success('Scan saved to patient records')
-      navigate('/scans')
+      toast.success('Scan saved', { description: `Patient record ${patientCode} created` })
+      navigate('/patients')
     } catch (error) {
       play('error')
       console.error('[saveToPatient]', error)
@@ -727,6 +742,7 @@ export function Analyze() {
                           <div className="space-y-2.5">
                             {Object.entries(result.all_probabilities)
                               .sort(([, a], [, b]) => b - a)
+                              .filter(([, prob]) => prob > 0)
                               .map(([disease, prob], i) => (
                                 <ProbBar
                                   key={disease}

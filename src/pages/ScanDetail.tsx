@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Eye, Layers, Columns2, CircleCheck as CheckCircle2, Circle as XCircle, Loader as Loader2, Brain, GitBranch, Circle as HelpCircle, ClipboardList, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Slider } from '@/components/ui/slider'
 import { Textarea } from '@/components/ui/textarea'
@@ -15,43 +16,7 @@ import { useAuthStore } from '@/store/useUIStore'
 import { useSound } from '@/hooks/useSound'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-
-const DEMO_SCAN = {
-  id: 'b1b2c3d4-0001-0001-0001-000000000001',
-  patient_code: 'PT-2024-001',
-  predicted_class: 'Diabetic Retinopathy',
-  confidence: 0.912,
-  uncertainty_score: 0.085,
-  uncertainty_level: 'low' as const,
-  referral_flag: false,
-  eye_side: 'right',
-  created_at: '2 days ago',
-  concepts: [
-    { name: 'Microaneurysms', confidence: 0.94, description: 'Small balloon-like swellings in retinal capillaries', icon: '🔴' },
-    { name: 'Hard Exudates', confidence: 0.87, description: 'Bright yellow lipid deposits from leaky blood vessels', icon: '🟡' },
-    { name: 'Retinal Hemorrhages', confidence: 0.82, description: 'Dot and blot hemorrhages from ruptured microaneurysms', icon: '🔴' },
-  ],
-  reasons: [
-    'Multiple microaneurysms detected in the temporal and nasal quadrants.',
-    'Hard exudate clustering near the fovea raises concern for macular edema.',
-    'Dot-and-blot hemorrhage density consistent with moderate non-proliferative DR.',
-  ],
-  differential: [
-    { disease: 'Normal', probability: 0.035, reason: 'Structural abnormalities are clearly present across multiple quadrants.' },
-    { disease: 'Hypertensive Retinopathy', probability: 0.021, reason: 'AV nicking is absent; hemorrhage pattern differs from hypertensive changes.' },
-  ],
-  probabilities: {
-    'Diabetic Retinopathy': 0.9120,
-    'Normal': 0.0350,
-    'Hypertensive Retinopathy': 0.0210,
-    'Glaucoma': 0.0120,
-    'Media Hazy': 0.0080,
-    'Myopic Retinopathy': 0.0050,
-    'Optic Disc Disorder': 0.0040,
-    'Cataract': 0.0020,
-    'Retinal Vein Occlusion': 0.0010,
-  }
-}
+import { formatDistanceToNow } from 'date-fns'
 
 const DISEASES = [
   'Diabetic Retinopathy', 'Media Hazy', 'Myopic Retinopathy', 'Optic Disc Disorder',
@@ -59,6 +24,23 @@ const DISEASES = [
 ]
 
 type ImageView = 'original' | 'heatmap' | 'sidebyside'
+
+interface ScanData {
+  id: string
+  patient_code: string
+  predicted_class: string
+  confidence: number
+  uncertainty_score: number
+  uncertainty_level: 'low' | 'medium' | 'high'
+  referral_flag: boolean
+  eye_side: string
+  status: string
+  created_at: string
+  all_probabilities: Record<string, number>
+  concepts: { name: string; confidence: number; description: string; icon: string }[]
+  reasons: string[]
+  differential: { disease: string; probability: number; ruled_out_because?: string }[]
+}
 
 export function ScanDetail() {
   const { id } = useParams()
@@ -71,26 +53,77 @@ export function ScanDetail() {
   const [notes, setNotes] = useState('')
   const [signingOff, setSigningOff] = useState(false)
   const [signedOff, setSignedOff] = useState(false)
+  const [scan, setScan] = useState<ScanData | null>(null)
+  const [loading, setLoading] = useState(true)
   const { user, profile } = useAuthStore()
   const { play } = useSound()
 
-  const scan = DEMO_SCAN
   const isOphthalmologist = profile?.role === 'ophthalmologist'
 
-  async function handleSignOff() {
-    if (!agreement || !user) return
-    setSigningOff(true)
+  useEffect(() => {
+    if (!id) return
+    loadScan()
+  }, [id])
 
+  async function loadScan() {
+    setLoading(true)
+    try {
+      const { data, error } = await supabase
+        .from('scans')
+        .select('*, patients(patient_code)')
+        .eq('id', id)
+        .maybeSingle()
+
+      if (error) throw error
+      if (!data) { toast.error('Scan not found'); navigate('/scans'); return }
+
+      const meta: any = data.analysis_metadata ?? {}
+      setScan({
+        id: data.id,
+        patient_code: (data as any).patients?.patient_code ?? `SC-${data.id.slice(0, 6).toUpperCase()}`,
+        predicted_class: data.predicted_class,
+        confidence: data.confidence,
+        uncertainty_score: data.uncertainty_score,
+        uncertainty_level: data.uncertainty_level,
+        referral_flag: data.referral_flag,
+        eye_side: data.eye_side,
+        status: data.status,
+        created_at: data.created_at,
+        all_probabilities: (data.all_probabilities as Record<string, number>) ?? {},
+        concepts: (meta.concepts ?? []).map((c: any) => ({
+          name: c.name ?? c,
+          confidence: c.confidence ?? 0,
+          description: c.description ?? '',
+          icon: c.icon ?? '●',
+        })),
+        reasons: meta.reasons ?? [],
+        differential: (meta.differential ?? []).map((d: any) => ({
+          disease: d.disease ?? d.label ?? '',
+          probability: d.probability ?? 0,
+          ruled_out_because: d.ruled_out_because ?? d.ruledOutBecause ?? '',
+        })),
+      })
+    } catch (e) {
+      console.error(e)
+      toast.error('Failed to load scan')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleSignOff() {
+    if (!agreement || !user || !scan) return
+    setSigningOff(true)
     try {
       const { error } = await supabase.from('reviews').insert({
-        scan_id: id || scan.id,
+        scan_id: scan.id,
         reviewer_id: user.id,
         agreement,
         final_diagnosis: finalDiagnosis || scan.predicted_class,
         notes,
       })
       if (error) throw error
-
+      await supabase.from('scans').update({ status: 'signed_off' }).eq('id', scan.id)
       play('analysisComplete')
       setSignedOff(true)
       toast.success('Scan signed off', { description: `Final diagnosis: ${finalDiagnosis || scan.predicted_class}` })
@@ -101,6 +134,22 @@ export function ScanDetail() {
       setSigningOff(false)
     }
   }
+
+  if (loading) {
+    return (
+      <DashboardLayout title="Scan Detail">
+        <div className="max-w-7xl space-y-5">
+          <Skeleton className="h-8 w-48" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <Skeleton className="h-96" />
+            <Skeleton className="h-96" />
+          </div>
+        </div>
+      </DashboardLayout>
+    )
+  }
+
+  if (!scan) return null
 
   return (
     <DashboardLayout title="Scan Detail">
@@ -114,7 +163,9 @@ export function ScanDetail() {
             <span className="text-muted-foreground">·</span>
             <span className="text-sm text-muted-foreground capitalize">{scan.eye_side} eye</span>
             <span className="text-muted-foreground">·</span>
-            <span className="text-sm text-muted-foreground">{scan.created_at}</span>
+            <span className="text-sm text-muted-foreground">
+              {formatDistanceToNow(new Date(scan.created_at), { addSuffix: true })}
+            </span>
           </div>
           <UncertaintyBadge level={scan.uncertainty_level} size="sm" className="ml-auto" />
         </div>
@@ -150,12 +201,10 @@ export function ScanDetail() {
                   className="relative rounded-lg overflow-hidden bg-muted aspect-square"
                   style={{ transform: `scale(${zoom})`, transformOrigin: 'center', transition: 'transform 0.2s ease' }}
                 >
-                  {/* Placeholder retinal image pattern */}
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="relative size-64">
                       <div className="absolute inset-0 rounded-full bg-[#1a0a00] border-4 border-[#2a1200]" />
                       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-8 rounded-full bg-[#e8a050] opacity-90" />
-                      {/* Vessels */}
                       <svg className="absolute inset-0 size-full" viewBox="0 0 256 256">
                         <path d="M 128 128 Q 80 100 40 80" stroke="#c05020" strokeWidth="2" fill="none" opacity="0.6" />
                         <path d="M 128 128 Q 160 90 200 60" stroke="#c05020" strokeWidth="1.5" fill="none" opacity="0.5" />
@@ -184,11 +233,7 @@ export function ScanDetail() {
                         <span>Heatmap opacity</span>
                         <span className="tabular-nums">{Math.round(heatmapOpacity * 100)}%</span>
                       </div>
-                      <Slider
-                        min={0.1} max={0.9} step={0.05}
-                        value={[heatmapOpacity]}
-                        onValueChange={([v]) => setHeatmapOpacity(v)}
-                      />
+                      <Slider min={0.1} max={0.9} step={0.05} value={[heatmapOpacity]} onValueChange={([v]) => setHeatmapOpacity(v)} />
                     </div>
                   )}
                   <div className="space-y-1">
@@ -196,11 +241,7 @@ export function ScanDetail() {
                       <span>Zoom</span>
                       <span className="tabular-nums">{Math.round(zoom * 100)}%</span>
                     </div>
-                    <Slider
-                      min={0.5} max={2.5} step={0.1}
-                      value={[zoom]}
-                      onValueChange={([v]) => setZoom(v)}
-                    />
+                    <Slider min={0.5} max={2.5} step={0.1} value={[zoom]} onValueChange={([v]) => setZoom(v)} />
                   </div>
                 </div>
               </CardContent>
@@ -239,7 +280,7 @@ export function ScanDetail() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    {Object.entries(scan.probabilities).sort(([,a],[,b]) => b - a).map(([d, p]) => (
+                    {Object.entries(scan.all_probabilities).sort(([, a], [, b]) => b - a).map(([d, p]) => (
                       <div key={d} className="space-y-0.5">
                         <div className="flex justify-between text-xs">
                           <span className={cn('font-medium', d === scan.predicted_class ? 'text-primary' : '')}>{d}</span>
@@ -281,13 +322,17 @@ export function ScanDetail() {
                 </TabsContent>
 
                 <TabsContent value="differential" className="p-4 space-y-3 mt-0">
-                  {scan.differential.map((d, i) => (
+                  {scan.differential.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">No differential data available</p>
+                  ) : scan.differential.map((d, i) => (
                     <div key={i} className="border border-border rounded-lg p-3 space-y-1.5">
                       <div className="flex justify-between">
                         <span className="text-sm font-semibold">{d.disease}</span>
                         <span className="text-xs tabular-nums text-muted-foreground">{(d.probability * 100).toFixed(1)}%</span>
                       </div>
-                      <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground/70">Ruled out: </span>{d.reason}</p>
+                      {d.ruled_out_because && (
+                        <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground/70">Ruled out: </span>{d.ruled_out_because}</p>
+                      )}
                     </div>
                   ))}
                 </TabsContent>
@@ -297,7 +342,11 @@ export function ScanDetail() {
                     <p className="text-4xl font-bold tabular-nums">{(scan.uncertainty_score * 100).toFixed(0)}%</p>
                     <UncertaintyBadge level={scan.uncertainty_level} size="lg" className="mt-2" />
                     <p className="text-xs text-muted-foreground mt-3 leading-relaxed">
-                      Low uncertainty — the model prediction is reliable. Standard clinical review recommended.
+                      {scan.uncertainty_level === 'low'
+                        ? 'Low uncertainty — the model prediction is reliable. Standard clinical review recommended.'
+                        : scan.uncertainty_level === 'medium'
+                        ? 'Medium uncertainty — review carefully. Consider additional clinical context.'
+                        : 'High uncertainty — senior specialist review required before any clinical decision.'}
                     </p>
                   </div>
                 </TabsContent>
@@ -322,9 +371,7 @@ export function ScanDetail() {
                             onClick={() => setAgreement('agree')}
                             className={cn(
                               'flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border text-sm font-medium transition-all',
-                              agreement === 'agree'
-                                ? 'bg-[#EAF3DE] border-[#3B6D11] text-[#3B6D11]'
-                                : 'border-border hover:border-[#3B6D11]/40 hover:bg-muted/40'
+                              agreement === 'agree' ? 'bg-[#EAF3DE] border-[#3B6D11] text-[#3B6D11]' : 'border-border hover:border-[#3B6D11]/40 hover:bg-muted/40'
                             )}
                           >
                             <CheckCircle2 className="size-4" /> Agree
@@ -333,9 +380,7 @@ export function ScanDetail() {
                             onClick={() => setAgreement('disagree')}
                             className={cn(
                               'flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border text-sm font-medium transition-all',
-                              agreement === 'disagree'
-                                ? 'bg-destructive/10 border-destructive text-destructive'
-                                : 'border-border hover:border-destructive/40 hover:bg-muted/40'
+                              agreement === 'disagree' ? 'bg-destructive/10 border-destructive text-destructive' : 'border-border hover:border-destructive/40 hover:bg-muted/40'
                             )}
                           >
                             <XCircle className="size-4" /> Disagree
