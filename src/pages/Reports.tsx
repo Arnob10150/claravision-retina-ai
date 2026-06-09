@@ -257,18 +257,28 @@ export function Reports() {
       const { data, error } = await supabase
         .from('reviews')
         .select(`
-          id, agreement, final_diagnosis, notes, signed_off_at,
+          id, agreement, final_diagnosis, notes, signed_off_at, reviewer_id,
           scans(
             id, predicted_class, confidence, uncertainty_level, uncertainty_score,
             eye_side, analysis_metadata, referral_flag,
-            patients(patient_code, age, gender, institution)
-          ),
-          profiles(full_name, role, institution)
+            patients(patient_code, age, gender)
+          )
         `)
         .order('signed_off_at', { ascending: false })
         .limit(100)
 
       if (error) throw error
+
+      // Fetch reviewer profiles separately to avoid FK join issues
+      const reviewerIds = [...new Set((data ?? []).map((r: any) => r.reviewer_id).filter(Boolean))]
+      const profileMap: Record<string, any> = {}
+      if (reviewerIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, full_name, role, institution')
+          .in('id', reviewerIds)
+        for (const p of profiles ?? []) profileMap[p.id] = p
+      }
 
       setReports(
         (data ?? [])
@@ -276,6 +286,7 @@ export function Reports() {
           .map((r: any) => {
             const s = r.scans
             const p = s.patients
+            const prof = profileMap[r.reviewer_id] ?? null
             const meta: any = s.analysis_metadata ?? {}
             const concepts: string[] = (meta.concepts ?? []).map((c: any) => c.name ?? c).filter(Boolean)
             return {
@@ -288,12 +299,12 @@ export function Reports() {
               uncertainty_level: s.uncertainty_level,
               uncertainty_score: s.uncertainty_score ?? 0,
               eye_side: s.eye_side === 'left' ? 'Left (OS)' : s.eye_side === 'right' ? 'Right (OD)' : '–',
-              reviewer: r.profiles?.full_name ?? 'Clinician',
-              reviewer_role: r.profiles?.role ?? 'Ophthalmologist',
+              reviewer: prof?.full_name ?? 'Clinician',
+              reviewer_role: prof?.role ?? 'Ophthalmologist',
               final_diagnosis: r.final_diagnosis,
               agreement: r.agreement === 'agree',
-              institution: p?.institution ?? r.profiles?.institution ?? null,
-              signed_off_at: r.signed_off_at,
+              institution: prof?.institution ?? null,
+              signed_off_at: r.signed_off_at ?? new Date().toISOString(),
               notes: r.notes ?? '',
               analysis_id: meta.analysis_id ?? s.id.slice(0, 12).toUpperCase(),
               processing_time_ms: meta.processing_time_ms ?? 0,

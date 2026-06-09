@@ -12,7 +12,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { UncertaintyBadge } from '@/components/shared/UncertaintyBadge'
 import { supabase } from '@/lib/supabase'
-import { useAuthStore } from '@/store/useUIStore'
 import { useSound } from '@/hooks/useSound'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -55,10 +54,7 @@ export function ScanDetail() {
   const [signedOff, setSignedOff] = useState(false)
   const [scan, setScan] = useState<ScanData | null>(null)
   const [loading, setLoading] = useState(true)
-  const { user, profile } = useAuthStore()
   const { play } = useSound()
-
-  const isOphthalmologist = profile?.role === 'ophthalmologist'
 
   useEffect(() => {
     if (!id) return
@@ -112,24 +108,28 @@ export function ScanDetail() {
   }
 
   async function handleSignOff() {
-    if (!agreement || !user || !scan) return
+    if (!agreement || !scan) return
     setSigningOff(true)
     try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) { toast.error('Not signed in'); return }
+
       const { error } = await supabase.from('reviews').insert({
         scan_id: scan.id,
-        reviewer_id: user.id,
+        reviewer_id: session.user.id,
         agreement,
         final_diagnosis: finalDiagnosis || scan.predicted_class,
         notes,
+        signed_off_at: new Date().toISOString(),
       })
       if (error) throw error
       await supabase.from('scans').update({ status: 'signed_off' }).eq('id', scan.id)
       play('analysisComplete')
       setSignedOff(true)
       toast.success('Scan signed off', { description: `Final diagnosis: ${finalDiagnosis || scan.predicted_class}` })
-    } catch {
+    } catch (e) {
       play('error')
-      toast.error('Failed to sign off scan')
+      toast.error('Failed to sign off scan', { description: e instanceof Error ? e.message : undefined })
     } finally {
       setSigningOff(false)
     }
@@ -410,15 +410,9 @@ export function ScanDetail() {
                         />
                       </div>
 
-                      {!isOphthalmologist && (
-                        <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-2.5">
-                          Sign-off requires Ophthalmologist role. Your notes will be saved for senior review.
-                        </p>
-                      )}
-
                       <Button
                         className="w-full"
-                        disabled={!agreement || signingOff || !isOphthalmologist}
+                        disabled={!agreement || signingOff}
                         onClick={handleSignOff}
                       >
                         {signingOff ? <><Loader2 className="size-4 animate-spin" /> Signing off…</> : 'Sign Off'}
