@@ -22,7 +22,7 @@ import { analyzeImage, type InferenceResult } from '@/lib/inference'
 import { deriveStage, urgencyToText, type TreatmentPriority } from '@/lib/clinical'
 import { GradCamPanel } from '@/components/shared/GradCamPanel'
 import { ReferralLetter } from '@/components/shared/ReferralLetter'
-import { AnalysisReport } from '@/components/shared/AnalysisReport'
+import { openAnalysisReport } from '@/components/shared/AnalysisReport'
 import { supabase, isSupabaseReady } from '@/lib/supabase'
 import { useSound } from '@/hooks/useSound'
 import { toast } from 'sonner'
@@ -131,7 +131,6 @@ export function Analyze() {
   const [metadata, setMetadata] = useState({ age: '', gender: '', eye_side: '' })
   const [saving, setSaving] = useState(false)
   const [referralOpen, setReferralOpen] = useState(false)
-  const [reportOpen, setReportOpen] = useState(false)
   const [showReferralAlert, setShowReferralAlert] = useState(true)
   const [stagingData, setStagingData] = useState<{ stage: any; guidance: any } | null>(null)
 
@@ -551,7 +550,7 @@ export function Analyze() {
                         <Button variant="outline" size="sm" onClick={() => setReferralOpen(true)}>
                           <Mail className="size-4" /> Referral Letter
                         </Button>
-                        <Button variant="outline" size="sm" onClick={() => setReportOpen(true)}>
+                        <Button variant="outline" size="sm" onClick={() => openAnalysisReport(result!, metadata)}>
                           <FileText className="size-4" /> Report
                         </Button>
                         <Button
@@ -1025,16 +1024,6 @@ export function Analyze() {
           )}
         </AnimatePresence>
       </div>
-
-      {/* Analysis Report dialog */}
-      {result && reportOpen && (
-        <AnalysisReport
-          open={reportOpen}
-          onClose={() => setReportOpen(false)}
-          result={result}
-          metadata={metadata}
-        />
-      )}
 
       {/* Referral Letter dialog */}
       {result && referralOpen && (
